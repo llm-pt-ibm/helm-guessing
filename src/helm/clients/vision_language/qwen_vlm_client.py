@@ -7,7 +7,7 @@ from transformers.generation import GenerationConfig
 
 from helm.common.cache import CacheConfig
 from helm.common.gpu_utils import get_torch_device_name
-from helm.common.hierarchical_logger import hlog, htrack_block
+from helm.common.hierarchical_logger import hexception, hlog, htrack_block
 from helm.common.media_object import TEXT_TYPE
 from helm.common.request import Request, RequestResult, GeneratedOutput, Token
 from helm.common.request import wrap_request_time
@@ -115,14 +115,16 @@ class QwenVLMClient(CachingClient):
 
                     def do_it() -> Dict[str, Any]:
                         if request.model_engine == "qwen-vl-chat":
-                            completion, _ = model.chat(tokenizer, query=tokenizer.from_list_format(query), history=None)
+                            completion, _ = model.chat(  # type: ignore
+                                tokenizer, query=tokenizer.from_list_format(query), history=None  # type: ignore
+                            )
                         else:
-                            inputs = tokenizer(tokenizer.from_list_format(query), return_tensors="pt")
+                            inputs = tokenizer(tokenizer.from_list_format(query), return_tensors="pt")  # type: ignore
                             inputs = inputs.to(self._device)
-                            pred = model.generate(**inputs, **generation_args)
-                            completion = tokenizer.decode(pred.cpu()[0], skip_special_tokens=False)
+                            pred = model.generate(**inputs, **generation_args)  # type: ignore
+                            completion = tokenizer.decode(pred.cpu()[0], skip_special_tokens=False)  # type: ignore
 
-                        tokens: List[str] = tokenizer.tokenize(completion)
+                        tokens: List[str] = tokenizer.tokenize(completion)  # type: ignore
                         return {"output": (completion, tokens)}
 
                     # Include the prompt and model name in the cache key
@@ -137,6 +139,7 @@ class QwenVLMClient(CachingClient):
                     )
                     result, cached = self.cache.get(cache_key, wrap_request_time(do_it))
                 except RuntimeError as model_error:
+                    hexception(model_error)
                     return RequestResult(
                         success=False, cached=False, error=str(model_error), completions=[], embedding=[]
                     )

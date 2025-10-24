@@ -8,7 +8,7 @@ from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
 from helm.common.cache import CacheConfig
 from helm.common.images_utils import open_image
 from helm.common.gpu_utils import get_torch_device_name
-from helm.common.hierarchical_logger import hlog, htrack_block
+from helm.common.hierarchical_logger import hexception, hlog, htrack_block
 from helm.common.media_object import TEXT_TYPE
 from helm.common.optional_dependencies import handle_module_not_found_error
 from helm.common.request import Request, RequestResult, GeneratedOutput, Token
@@ -93,7 +93,7 @@ class PaliGemmaClient(CachingClient):
             else:
                 raise ValueError(f"Unrecognized MediaObject type {media_object.type}")
         prompt_text: str = "\n".join(prompt_pieces)
-        model_inputs = processor(text=prompt_text, images=images, return_tensors="pt").to(self._device)
+        model_inputs = processor(text=prompt_text, images=images, return_tensors="pt").to(self._device)  # type: ignore
         input_len = model_inputs["input_ids"].shape[-1]
 
         completions: List[GeneratedOutput] = []
@@ -109,7 +109,7 @@ class PaliGemmaClient(CachingClient):
                             )[0]
                             if not request.echo_prompt:
                                 generation = generation[input_len:]
-                            decoded = processor.decode(generation, skip_special_tokens=True)
+                            decoded = processor.decode(generation, skip_special_tokens=True)  # type: ignore
                             return {"output": decoded}
 
                     # Include the prompt and model name in the cache key
@@ -126,6 +126,7 @@ class PaliGemmaClient(CachingClient):
                     result, cached = self.cache.get(cache_key, wrap_request_time(do_it))
                     concat_results.append(result)
             except RuntimeError as model_error:
+                hexception(model_error)
                 return RequestResult(success=False, cached=False, error=str(model_error), completions=[], embedding=[])
 
             for result in concat_results:

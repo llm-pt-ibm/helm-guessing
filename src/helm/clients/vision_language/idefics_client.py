@@ -8,7 +8,7 @@ from transformers import IdeficsForVisionText2Text, AutoProcessor, IdeficsProces
 from helm.common.cache import CacheConfig
 from helm.common.images_utils import open_image
 from helm.common.gpu_utils import get_torch_device_name
-from helm.common.hierarchical_logger import hlog, htrack_block
+from helm.common.hierarchical_logger import hexception, hlog, htrack_block
 from helm.common.media_object import TEXT_TYPE
 from helm.common.optional_dependencies import handle_module_not_found_error
 from helm.common.request import Request, RequestResult, GeneratedOutput, Token
@@ -89,14 +89,18 @@ class IDEFICSClient(CachingClient):
         input_args: Dict[str, Union[str, bool]] = {"return_tensors": "pt"}
         generation_args = {
             "max_new_tokens": request.max_tokens,
-            "bad_words_ids": processor.tokenizer(self.BAD_WORD_TOKENS, add_special_tokens=False).input_ids,
+            "bad_words_ids": processor.tokenizer(  # type: ignore
+                self.BAD_WORD_TOKENS, add_special_tokens=False
+            ).input_ids,
         }
 
         if self.END_OF_UTTERANCE_TOKEN in request.stop_sequences:
             # Following https://huggingface.co/HuggingFaceM4/idefics-80b-instruct,
             # specify <end_of_utterance> as an exit condition.
             input_args["add_end_of_utterance_token"] = False
-            exit_condition = processor.tokenizer(self.END_OF_UTTERANCE_TOKEN, add_special_tokens=False).input_ids
+            exit_condition = processor.tokenizer(  # type: ignore
+                self.END_OF_UTTERANCE_TOKEN, add_special_tokens=False
+            ).input_ids
             generation_args["eos_token_id"] = exit_condition
 
         multimodal_prompt: List[Union[str, Image.Image]] = []
@@ -133,6 +137,7 @@ class IDEFICSClient(CachingClient):
                 )
                 result, cached = self.cache.get(cache_key, wrap_request_time(do_it))
             except RuntimeError as model_error:
+                hexception(model_error)
                 return RequestResult(success=False, cached=False, error=str(model_error), completions=[], embedding=[])
 
             for text in result["output"]:

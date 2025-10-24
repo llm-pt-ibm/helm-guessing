@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.10"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
       - name: Install uv
         run: pip install uv
       - name: Resolve dependencies
-        run: uv pip compile setup.cfg --upgrade --extra all --extra dev --universal --no-annotate --constraints constraints.txt -o requirements.txt
+        run: uv pip compile pyproject.toml --upgrade --extra all --extra dev --universal --no-annotate --constraints constraints.txt -o requirements.txt
         # Need to manually run tests here because the pull request opened later will not
         # run the test workflow.
         #

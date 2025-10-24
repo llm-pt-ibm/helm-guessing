@@ -6,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from helm.common.cache import CacheConfig
 from helm.common.gpu_utils import get_torch_device_name
-from helm.common.hierarchical_logger import hlog, htrack_block
+from helm.common.hierarchical_logger import hexception, hlog, htrack_block
 from helm.common.media_object import TEXT_TYPE
 from helm.common.request import Request, RequestResult, GeneratedOutput, Token
 from helm.common.request import wrap_request_time
@@ -106,8 +106,10 @@ class QwenAudioLMClient(CachingClient):
                 try:
 
                     def do_it() -> Dict[str, Any]:
-                        completion, _ = model.chat(tokenizer, query=tokenizer.from_list_format(query), history=None)
-                        tokens: List[str] = tokenizer.tokenize(completion)
+                        completion, _ = model.chat(  # type: ignore
+                            tokenizer, query=tokenizer.from_list_format(query), history=None  # type: ignore
+                        )
+                        tokens: List[str] = tokenizer.tokenize(completion)  # type: ignore
                         return {"output": (completion, tokens)}
 
                     # Include the prompt and model name in the cache key
@@ -122,6 +124,7 @@ class QwenAudioLMClient(CachingClient):
                     )
                     result, cached = self.cache.get(cache_key, wrap_request_time(do_it))
                 except RuntimeError as model_error:
+                    hexception(model_error)
                     return RequestResult(
                         success=False, cached=False, error=str(model_error), completions=[], embedding=[]
                     )

@@ -7,7 +7,7 @@ from transformers import Qwen2AudioForConditionalGeneration, AutoProcessor
 
 from helm.common.cache import CacheConfig
 from helm.common.gpu_utils import get_torch_device_name
-from helm.common.hierarchical_logger import hlog, htrack_block
+from helm.common.hierarchical_logger import hexception, hlog, htrack_block
 from helm.common.media_object import TEXT_TYPE
 from helm.common.request import Request, RequestResult, GeneratedOutput, Token
 from helm.common.request import wrap_request_time
@@ -113,7 +113,9 @@ class Qwen2AudioLMClient(CachingClient):
                 try:
 
                     def do_it() -> Dict[str, Any]:
-                        inputs = tokenizer.apply_chat_template(input_query, add_generation_prompt=True, tokenize=False)
+                        inputs = tokenizer.apply_chat_template(  # type: ignore
+                            input_query, add_generation_prompt=True, tokenize=False
+                        )
                         audios: List[Any] = []
                         # Refer to the official Qwen2-Audio documentation for the format of the input query
                         # https://huggingface.co/Qwen/Qwen2-Audio-7B-Instruct
@@ -124,13 +126,13 @@ class Qwen2AudioLMClient(CachingClient):
                                         audios.append(
                                             librosa.load(
                                                 element["audio_url"],
-                                                sr=tokenizer.feature_extractor.sampling_rate,
+                                                sr=tokenizer.feature_extractor.sampling_rate,  # type: ignore
                                             )[0]
                                         )
-                        inputs = tokenizer(
+                        inputs = tokenizer(  # type: ignore
                             text=inputs,
                             audios=audios,
-                            sampling_rate=tokenizer.feature_extractor.sampling_rate,
+                            sampling_rate=tokenizer.feature_extractor.sampling_rate,  # type: ignore
                             return_tensors="pt",
                             padding=True,
                         )
@@ -140,11 +142,11 @@ class Qwen2AudioLMClient(CachingClient):
                         inputs = inputs.to(self._device)
                         pred = model.generate(**inputs, max_length=request.max_tokens + input_length)[:, input_length:]
 
-                        completion = tokenizer.decode(
+                        completion = tokenizer.decode(  # type: ignore
                             pred.cpu()[0], skip_special_tokens=True, clean_up_tokenization_spaces=False
                         )
                         # The processor of Qwen2-Audio-Instruct consists an AutoTokenizer and a WhisperFeatureExtractor
-                        tokens: List[str] = tokenizer.tokenizer.tokenize(completion)
+                        tokens: List[str] = tokenizer.tokenizer.tokenize(completion)  # type: ignore
                         return {"output": (completion, tokens)}
 
                     # Include the prompt and model name in the cache key
@@ -159,6 +161,7 @@ class Qwen2AudioLMClient(CachingClient):
                     )
                     result, cached = self.cache.get(cache_key, wrap_request_time(do_it))
                 except RuntimeError as model_error:
+                    hexception(model_error)
                     return RequestResult(
                         success=False, cached=False, error=str(model_error), completions=[], embedding=[]
                     )
