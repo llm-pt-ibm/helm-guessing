@@ -4895,6 +4895,15 @@ model_deployments:
       args:
         pretrained_model_name_or_path: 22h/cabrita_7b_pt_850000
 
+  - name: 22h/open-cabrita3b
+    model_name: 22h/open-cabrita3b
+    tokenizer_name: 22h/open-cabrita3b
+    max_sequence_length: 4094
+    client_spec:
+      class_name: "helm.clients.huggingface_client.HuggingFaceClient"
+      args:
+        pretrained_model_name_or_path: 22h/open-cabrita3b
+
   - name: PORTULAN/gervasio-7b-portuguese-ptbr-decoder
     model_name: PORTULAN/gervasio-7b-portuguese-ptbr-decoder
     tokenizer_name: PORTULAN/gervasio-7b-portuguese-ptbr-decoder

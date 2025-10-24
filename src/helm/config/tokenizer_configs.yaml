@@ -1222,6 +1222,14 @@ tokenizer_configs:
         pretrained_model_name_or_path: 22h/cabrita_7b_pt_850000
     end_of_text_token: "</s>"
     prefix_token: "<s>"
+  
+  - name: 22h/open-cabrita3b
+    tokenizer_spec:
+      class_name: "helm.tokenizers.huggingface_tokenizer.HuggingFaceTokenizer"
+      args:
+        pretrained_model_name_or_path: 22h/open-cabrita3b
+    end_of_text_token: "</s>"
+    prefix_token: "<s>"
 
 # Gervásio 7B PT‑BR/PT‑PT tokenizer
   - name: PORTULAN/gervasio-7b-portuguese-ptbr-decoder

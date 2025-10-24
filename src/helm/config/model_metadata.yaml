@@ -5110,6 +5110,15 @@ models:
     release_date: 2023-08-23
     tags: [TEXT_MODEL_TAG, LIMITED_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
 
+  - name: 22h/open-cabrita3b
+    display_name: Cabrita PT-BR 3B
+    description: Cabrita is an OpenLLaMA-based model, continuously trained in Portuguese (mC4-pt subset) for 850000 steps with efficient tokenization adapted to the language.
+    creator_organization_name: 22h
+    access: open
+    num_parameters: 7000000000
+    release_date: 2023-08-23
+    tags: [TEXT_MODEL_TAG, LIMITED_FUNCTIONALITY_TEXT_MODEL_TAG, INSTRUCTION_FOLLOWING_MODEL_TAG]
+
   - name: PORTULAN/gervasio-7b-portuguese-ptbr-decoder
     display_name: Gervásio PT-BR/PT-PT 7B Decoder
     description: Gervásio PT* is a 7B parameter decoder model, adapted from LLaMA27B, trained for both Brazilian and European Portuguese. Fine-tuned with translated data from benchmarks such as GLUE and SuperGLUE.
